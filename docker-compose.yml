@@ -1,0 +1,53 @@
+services:
+  postgres:
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
+    container_name: cyberfusionai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cyberfusionai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cyberfusionai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cyberfusionai-backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: CyberFusion AI
+      VERSION: 1.0.0
+      DEBUG: "false"
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/cyberfusionai
+      ALLOWED_ORIGINS: '["http://localhost:5173","http://localhost:8000"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: cyberfusionai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
