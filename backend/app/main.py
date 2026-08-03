@@ -9,6 +9,9 @@ from app.api import api_router
 from app.config.settings import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
+from app.database.bootstrap import initialize_database
+from app.database.session import SessionLocal
+from app.middleware.authorization import AuthorizationMiddleware
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.schemas.common import HealthResponse, ProjectStatusResponse, VersionResponse
@@ -19,6 +22,9 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     setup_logging(settings.log_dir, settings.log_level)
     app.state.settings = settings
+    with SessionLocal() as session:
+        initialize_database(session)
+        session.commit()
     yield
 
 
@@ -36,6 +42,7 @@ def create_app() -> FastAPI:
 
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(LoggingMiddleware)
+    app.add_middleware(AuthorizationMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins or ["*"],

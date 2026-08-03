@@ -38,7 +38,17 @@ class Settings(BaseSettings):
     )
     jwt_secret_key: str = Field(default="change-me")
     jwt_algorithm: str = "HS256"
-    jwt_access_token_expire_minutes: int = 60
+    jwt_access_token_expire_minutes: int = 15
+    jwt_refresh_token_expire_days: int = 7
+    jwt_issuer: str = "CyberFusion AI"
+    jwt_audience: str = "CyberFusion AI Users"
+    auth_password_min_length: int = 12
+    auth_password_require_uppercase: bool = True
+    auth_password_require_lowercase: bool = True
+    auth_password_require_digit: bool = True
+    auth_password_require_special: bool = True
+    auth_max_failed_login_attempts: int = 5
+    auth_lockout_minutes: int = 30
     log_level: str = "INFO"
     log_dir: Path = Field(default_factory=lambda: PROJECT_ROOT / "logs")
 

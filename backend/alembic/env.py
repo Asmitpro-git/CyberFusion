@@ -11,7 +11,10 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
 from app.config.settings import get_settings  # noqa: E402
-from app.models.base import Base  # noqa: E402
+import app.models  # noqa: E402,F401
+from app.models import Base
+from app.models.role import Role
+from app.models.user import User
 
 config = context.config
 
