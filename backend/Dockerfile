@@ -18,6 +18,7 @@ COPY backend/app ./app
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini ./alembic.ini
 COPY backend/logs ./logs
+COPY backend/tests ./tests
 
 EXPOSE 8000
 
