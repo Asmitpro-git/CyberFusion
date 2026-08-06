@@ -33,18 +33,50 @@ class UserSummary(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=150)
-    email: EmailStr
-    password: str = Field(min_length=1)
-    role_name: str | None = Field(default="Viewer", max_length=120)
+    """
+    Request schema for user registration.
+    """
 
-    @field_validator("username")
-    @classmethod
-    def normalize_username(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise ValueError("username must not be empty")
-        return normalized
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+        examples=["asmit"],
+    )
+
+    email: EmailStr = Field(
+        ...,
+        examples=["asmit@example.com"],
+    )
+
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        examples=["CyberFusion@2026"],
+    )
+
+
+class UserResponse(BaseModel):
+    """
+    Public user information.
+    """
+
+    id: str
+    username: str
+    email: EmailStr
+    role: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RegisterResponse(BaseModel):
+    """
+    Response returned after successful registration.
+    """
+
+    message: str
+    user: UserResponse
 
 
 class LoginRequest(BaseModel):
