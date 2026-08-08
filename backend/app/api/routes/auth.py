@@ -3,17 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import CurrentUser
 from app.database.session import get_db
-from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest
-from app.services.auth_service import AuthService
-
-from app.schemas.auth import (
-    AuthResponse,
-    LoginRequest,
-    RefreshTokenRequest,
-    RegisterRequest,
-)
-
 from app.schemas.auth import (
     AuthResponse,
     LoginRequest,
@@ -21,7 +12,9 @@ from app.schemas.auth import (
     LogoutResponse,
     RefreshTokenRequest,
     RegisterRequest,
+    UserSummary,
 )
+from app.services.auth_service import AuthService
 
 router = APIRouter(
     prefix="/auth",
@@ -62,7 +55,8 @@ def login(
         username_or_email=request.username_or_email,
         password=request.password,
     )
-    
+
+
 @router.post(
     "/refresh",
     response_model=AuthResponse,
@@ -77,6 +71,7 @@ def refresh(
     return service.refresh(
         refresh_token=request.refresh_token,
     )
+
 
 @router.post(
     "/logout",
@@ -96,3 +91,14 @@ def logout(
     return LogoutResponse(
         detail="Logged out successfully.",
     )
+
+
+@router.get(
+    "/me",
+    response_model=UserSummary,
+    status_code=200,
+)
+def get_me(
+    current_user: CurrentUser,
+) -> UserSummary:
+    return UserSummary.model_validate(current_user)

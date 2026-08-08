@@ -14,7 +14,7 @@ def get_app_settings() -> Settings:
 
 
 def get_database_session() -> Generator[Session, None, None]:
-    return get_db()
+    yield from get_db()
 
 
 AppSettings = Depends(get_app_settings)
