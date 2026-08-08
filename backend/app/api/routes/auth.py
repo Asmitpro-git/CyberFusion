@@ -7,6 +7,7 @@ from app.auth.dependencies import CurrentUser
 from app.database.session import get_db
 from app.schemas.auth import (
     AuthResponse,
+    ChangePasswordRequest,
     LoginRequest,
     LogoutRequest,
     LogoutResponse,
@@ -102,3 +103,22 @@ def get_me(
     current_user: CurrentUser,
 ) -> UserSummary:
     return UserSummary.model_validate(current_user)
+
+
+@router.post(
+    "/change-password",
+    response_model=AuthResponse,
+    status_code=200,
+)
+def change_password(
+    request: ChangePasswordRequest,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db),
+) -> AuthResponse:
+    service = AuthService(db)
+
+    return service.change_password(
+        user_id=current_user.id,
+        current_password=request.current_password,
+        new_password=request.new_password,
+    )
