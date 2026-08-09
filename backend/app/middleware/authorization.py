@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from urllib import request
+from urllib import request
 from uuid import UUID
 
 from fastapi import HTTPException, Request, status
 from fastapi.routing import APIRoute
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.routing import Match
+from fastapi.responses import JSONResponse
 
 from app.auth.dependencies import AuthenticatedUser
 from app.auth.jwt import verify_token
@@ -26,19 +29,42 @@ class AuthorizationContext:
 class AuthorizationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         route = self._match_route(request)
+
         if route is None:
             return await call_next(request)
 
-        required_roles = tuple(getattr(route.endpoint, ROLE_ATTRIBUTE, ()))
-        required_permissions = tuple(getattr(route.endpoint, PERMISSION_ATTRIBUTE, ()))
+        required_roles = tuple(
+            getattr(route.endpoint, ROLE_ATTRIBUTE, ())
+        )
+
+        required_permissions = tuple(
+            getattr(route.endpoint, PERMISSION_ATTRIBUTE, ())
+        )
+
         if not required_roles and not required_permissions:
             return await call_next(request)
 
-        context = self._resolve_authorization_context(request)
-        self._enforce_requirements(context.user, required_roles, required_permissions)
-        request.state.authenticated_user = context.user
-        request.state.authorization_context = context
-        return await call_next(request)
+        try:
+            context = self._resolve_authorization_context(request)
+
+            self._enforce_requirements(
+                context.user,
+                required_roles,
+                required_permissions,
+            )
+
+            request.state.authenticated_user = context.user
+            request.state.authorization_context = context
+
+            return await call_next(request)
+
+        except HTTPException as exc:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "detail": exc.detail,
+                },
+            )
 
     def _match_route(self, request: Request) -> APIRoute | None:
         for route in request.app.routes:
